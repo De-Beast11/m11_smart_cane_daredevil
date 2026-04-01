@@ -4,11 +4,11 @@ ToggleButton::ToggleButton(int buttonPin) {
     pin = buttonPin;
 }
 
-void ToggleButton::begin() {
+void ToggleButton::setup() {
     pinMode(pin, INPUT_PULLUP);
 }
 
-void ToggleButton::update() {
+void ToggleButton::update(FeedbackDevice &device) {
     bool buttonState = digitalRead(pin);
 
     if (buttonState != lastButtonState) {
@@ -22,10 +22,11 @@ void ToggleButton::update() {
         stableState = buttonState;
 
         // Detect button press (HIGH -> LOW)
-        if (stableState == LOW) {
+        if (stableState == LOW && !device.getTurnedOn()) {
             mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
             Serial.print("BUTTON PRESSED, Feedback Mode: ");
             Serial.println(mode);
+            device.turnOnFor(true, 5000);
         }
         }
     }

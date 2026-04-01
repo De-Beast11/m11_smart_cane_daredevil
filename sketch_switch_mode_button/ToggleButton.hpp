@@ -2,6 +2,7 @@
 #define TOGGLE_BUTTON_HPP
 
 #include <Arduino.h>
+#include "FeedbackDevice.hpp"
 
 enum feedbackMode {
   HAPTIC,
@@ -25,9 +26,9 @@ private:
 public:
   ToggleButton(int buttonPin);
 
-  void begin();
+  void setup();
 
-  void update(); 
+  void update(FeedbackDevice &device); 
   
   feedbackMode getFeedbackMode();
 };
