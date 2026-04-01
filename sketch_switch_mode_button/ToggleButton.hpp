@@ -20,7 +20,7 @@ private:
   bool stableState = HIGH;
 
   unsigned long lastDebounceTime = 0;
-  const unsigned long debounceDelay = 20;
+  const unsigned long debounceDelay = 50;
 
 public:
   ToggleButton(int buttonPin);
