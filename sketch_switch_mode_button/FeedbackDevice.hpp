@@ -5,23 +5,22 @@
 
 class FeedbackDevice {
 public:
+    // Constructor takes the pin number of the feedback device
     FeedbackDevice(int fbDevicePin);
-
+    // Returns whether the feedback device is currently turned on
     bool getTurnedOn();
-
+    // Sets up the feedback device pin
     void setup();
-
+    // Turns the feedback device on
     void turnOn();
-
+    // Turns the feedback device off
     void turnOff();
-
     // Turns the feedback device on for a duration
     // Needs the be called in loop() to function properly
     void turnOnFor(bool shouldTurnOn=false, unsigned long duration=1000);
 
 private:
     int pin;
-
     bool turnedOn = false;
     unsigned long endTime = 0;
 };

@@ -22,12 +22,13 @@ void FeedbackDevice::turnOff() {
     turnedOn = false;
 }
 
-void FeedbackDevice::turnOnFor(bool shouldTurnOn
-    , unsigned long duration) {
+void FeedbackDevice::turnOnFor(bool shouldTurnOn, unsigned long duration) {
+    // Turn on the feedback device and set the end time
     if (shouldTurnOn && !turnedOn) {
         turnOn();
         endTime = millis() + duration;
     }
+    // Check if the feedback device should be turned off
     if (turnedOn && millis() >= endTime) {
         turnOff();
     }

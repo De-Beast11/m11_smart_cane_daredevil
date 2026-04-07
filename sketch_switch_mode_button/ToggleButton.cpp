@@ -15,22 +15,23 @@ void ToggleButton::update(FeedbackDevice &audioFeedback, FeedbackDevicesGroup &h
         lastDebounceTime = millis();
     }
 
-    // If the reading stayed stable long enough
+    // If the reading stayed stable long enough (debouncing)
     if ((millis() - lastDebounceTime) > debounceDelay) {
 
         if (buttonState != stableState) {
         stableState = buttonState;
 
         // Detect button press (HIGH -> LOW)
+        // Do not allow changing feedback mode if any feedback device is currently turned on to prevent interrupting feedback
         if (stableState == LOW && !audioFeedback.getTurnedOn() && !hapticFeedbackGroup.getTurnedOn()) {
             mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
-            Serial.print("BUTTON PRESSED, Feedback Mode: ");
-            Serial.println(mode);
+            //Serial.print("BUTTON PRESSED, Feedback Mode: ");
+            //Serial.println(mode);
             if (mode == HAPTIC || mode == BOTH) {
-                hapticFeedbackGroup.turnOnFor(true, 1500);
+                hapticFeedbackGroup.turnOnFor(true, feedbackDuration);
             }
             if (mode == AUDIO || mode == BOTH) {
-                audioFeedback.turnOnFor(true, 1500);
+                audioFeedback.turnOnFor(true, feedbackDuration);
             }
         }
         }
