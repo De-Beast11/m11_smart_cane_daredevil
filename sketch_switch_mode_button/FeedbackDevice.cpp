@@ -22,7 +22,8 @@ void FeedbackDevice::turnOff() {
     turnedOn = false;
 }
 
-void FeedbackDevice::turnOnFor(bool shouldTurnOn, unsigned long duration) {
+void FeedbackDevice::turnOnFor(bool shouldTurnOn
+    , unsigned long duration) {
     if (shouldTurnOn && !turnedOn) {
         turnOn();
         endTime = millis() + duration;

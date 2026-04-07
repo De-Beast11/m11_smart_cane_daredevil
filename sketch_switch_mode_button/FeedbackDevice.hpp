@@ -16,7 +16,7 @@ public:
     void turnOff();
 
     // Turns the feedback device on for a duration
-    // Needs the ber called in loop() to function properly
+    // Needs the be called in loop() to function properly
     void turnOnFor(bool shouldTurnOn=false, unsigned long duration=1000);
 
 private:

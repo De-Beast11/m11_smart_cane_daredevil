@@ -2,7 +2,9 @@
 #define TOGGLE_BUTTON_HPP
 
 #include <Arduino.h>
+
 #include "FeedbackDevice.hpp"
+#include "FeedbackDevicesGroup.hpp"
 
 enum feedbackMode {
   HAPTIC,
@@ -28,7 +30,7 @@ public:
 
   void setup();
 
-  void update(FeedbackDevice &device); 
+  void update(FeedbackDevice &audioFeedback, FeedbackDevicesGroup &hapticFeedbackGroup); 
   
   feedbackMode getFeedbackMode();
 };

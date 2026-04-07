@@ -1,19 +1,26 @@
 #include "ToggleButton.hpp"
 #include "FeedbackDevice.hpp"
+#include "FeedbackDevicesGroup.hpp"
 
 const int pinFeedbackModeButton = 19;
-const int pinFeedbackDeviceTest = 18;
+const int pinAudioFeedback = 18;
+const int pinHaptic1Feedback = 17;
+const int pinHaptic2Feedback = 16;
+const int pinHaptic3Feedback = 15;
 
 ToggleButton feedbackButton(pinFeedbackModeButton);
-FeedbackDevice device(pinFeedbackDeviceTest);
+FeedbackDevice audioFeedback(pinAudioFeedback);
+FeedbackDevicesGroup hapticFeedbackGroup((int[]){pinHaptic1Feedback, pinHaptic2Feedback, pinHaptic3Feedback}, 3);
 
 void setup() {
   Serial.begin(9600);
   feedbackButton.setup();
-  device.setup();
+  audioFeedback.setup();
+  hapticFeedbackGroup.setup();
 }
 
 void loop() {
-  feedbackButton.update(device);
-  device.turnOnFor();
+  feedbackButton.update(audioFeedback, hapticFeedbackGroup);
+  audioFeedback.turnOnFor();
+  hapticFeedbackGroup.turnOnFor();
 }
