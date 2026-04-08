@@ -4,14 +4,6 @@
 #include <Arduino.h>
 
 #include "FeedbackDevice.hpp"
-#include "FeedbackDevicesGroup.hpp"
-
-enum feedbackMode {
-    HAPTIC,
-    AUDIO,
-    BOTH,
-    NUM_FEEDBACK_MODES
-};
 
 class ToggleButton {
 public:
@@ -20,7 +12,7 @@ public:
     // Sets up the button pin
     void setup();
     // Checks for button press and updates feedback mode and feedback devices accordingly
-    void update(FeedbackDevice &audioFeedback, FeedbackDevicesGroup &hapticFeedbackGroup); 
+    void update(); 
     // Returns the current feedback mode
     feedbackMode getFeedbackMode();
 

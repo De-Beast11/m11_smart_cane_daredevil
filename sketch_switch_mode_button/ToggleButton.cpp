@@ -8,7 +8,7 @@ void ToggleButton::setup() {
     pinMode(pin, INPUT_PULLUP);
 }
 
-void ToggleButton::update(FeedbackDevice &audioFeedback, FeedbackDevicesGroup &hapticFeedbackGroup) {
+void ToggleButton::update() {
     bool buttonState = digitalRead(pin);
 
     if (buttonState != lastButtonState) {
@@ -19,21 +19,14 @@ void ToggleButton::update(FeedbackDevice &audioFeedback, FeedbackDevicesGroup &h
     if ((millis() - lastDebounceTime) > debounceDelay) {
 
         if (buttonState != stableState) {
-        stableState = buttonState;
+            stableState = buttonState;
 
-        // Detect button press (HIGH -> LOW)
-        // Do not allow changing feedback mode if any feedback device is currently turned on to prevent interrupting feedback
-        if (stableState == LOW && !audioFeedback.getTurnedOn() && !hapticFeedbackGroup.getTurnedOn()) {
-            mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
-            //Serial.print("BUTTON PRESSED, Feedback Mode: ");
-            //Serial.println(mode);
-            if (mode == HAPTIC || mode == BOTH) {
-                hapticFeedbackGroup.turnOnFor(true, feedbackDuration);
+            // Detect button press (HIGH -> LOW)
+            if (stableState == LOW) {
+                mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
+                Serial.print("BUTTON PRESSED, Feedback Mode: ");
+                Serial.println(mode);
             }
-            if (mode == AUDIO || mode == BOTH) {
-                audioFeedback.turnOnFor(true, feedbackDuration);
-            }
-        }
         }
     }
 
