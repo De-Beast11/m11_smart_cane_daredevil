@@ -1,99 +1,113 @@
-// --- Additional Pin Definitions ---
+// --- Pin Definitions ---
 const int pinBuzzer      = 25;  
 const int pinMotorLeft   = 26;  // Left vibration motor
 const int pinMotorCentre = 27;  // Centre vibration motor
 const int pinMotorRight  = 14;  // Right vibration motor
 
+// --- Configuration ---
+const float MAX_DETECTION_DIST = 200.0; // Max distance in cm to trigger feedback
+
 // --- Enums ---
 enum feedbackMode { HAPTIC, AUDIO, BOTH, NUM_FEEDBACK_MODES };
-
-enum ObjectDirection { 
-  NONE, 
-  LEFT, 
-  CENTRE_LEFT, 
-  CENTRE, 
-  CENTRE_RIGHT, 
-  RIGHT 
-};
 
 // --- State Variables ---
 unsigned long prevFeedbackMillis = 0;
 bool pulseState = false;
-
-// (Assume ToggleButton class and modeButton object are defined here as before)
+bool wasInRange = true; // Added to prevent Serial Monitor spam
 
 void setup() {
   Serial.begin(115200);
   
-  // Initialize output pins
   pinMode(pinBuzzer, OUTPUT);
   pinMode(pinMotorLeft, OUTPUT);
   pinMode(pinMotorCentre, OUTPUT);
   pinMode(pinMotorRight, OUTPUT);
-  
-  // modeButton.begin(); // Setup your button
-  // Initialize sensors...
+
+  Serial.println("System Ready. Starting Sensor Simulation...");
 }
 
-// --- Directional Feedback Function ---
-void applyDirectionalFeedback(float distance, ObjectDirection dir, feedbackMode currentMode) {
-  // 1. Check if the object is within the warning threshold (e.g., 200cm)
-  if (distance > 0 && distance <= 200.0 && dir != NONE) {
+// --- Zone-Based Feedback Function ---
+void applyZoneFeedback(float distL, float distC, float distR, float distU, feedbackMode currentMode) {
+  
+  // 1. Find the absolute closest distance
+  float closestToF = min(distL, min(distC, distR));
+  float absoluteClosest = min(closestToF, distU);
+
+  // 2. Check if the closest object is within our warning threshold
+  if (absoluteClosest > 0 && absoluteClosest <= MAX_DETECTION_DIST) {
+    wasInRange = true;
     
-    // 2. Map distance to pulse speed: Closer = Faster (50ms to 500ms)
-    // constrain() ensures distance doesn't drop below 10 or exceed 200 before mapping
-    int interval = map(constrain(distance, 10, 200), 10, 200, 50, 500);
+    // Map the closest distance to a pulse speed
+    int interval = map(constrain(absoluteClosest, 10, MAX_DETECTION_DIST), 10, MAX_DETECTION_DIST, 50, 500);
 
     // 3. Non-blocking pulse timer
     if (millis() - prevFeedbackMillis >= interval) {
       prevFeedbackMillis = millis();
-      pulseState = !pulseState; // Toggle the pulse ON or OFF
+      pulseState = !pulseState; 
 
-      // If the pulse is in the "ON" phase
-      if (pulseState) {
+      if (pulseState) { // --- PULSE ON PHASE ---
         
-        // --- AUDIO FEEDBACK ---
+        Serial.print("PULSE ON  [Speed: "); 
+        Serial.print(interval); 
+        Serial.print("ms] -> Active Zones: ");
+
+        // Audio Feedback
         if (currentMode == AUDIO || currentMode == BOTH) {
           digitalWrite(pinBuzzer, HIGH);
+          Serial.print("BUZZER | ");
         }
 
-        // --- HAPTIC FEEDBACK ---
+        // Haptic Feedback 
         if (currentMode == HAPTIC || currentMode == BOTH) {
-          // Logic mapping: Turns HIGH only if the direction matches the motor's zone
-          digitalWrite(pinMotorLeft,   (dir == LEFT || dir == CENTRE_LEFT) ? HIGH : LOW);
-          digitalWrite(pinMotorCentre, (dir == CENTRE_LEFT || dir == CENTRE || dir == CENTRE_RIGHT) ? HIGH : LOW);
-          digitalWrite(pinMotorRight,  (dir == CENTRE_RIGHT || dir == RIGHT) ? HIGH : LOW);
+          if (distL <= MAX_DETECTION_DIST) {
+            digitalWrite(pinMotorLeft, HIGH);
+            Serial.print("LEFT MOTOR | ");
+          }
+          if (distC <= MAX_DETECTION_DIST || distU <= MAX_DETECTION_DIST) {
+            digitalWrite(pinMotorCentre, HIGH);
+            Serial.print("CENTRE MOTOR | ");
+          }
+          if (distR <= MAX_DETECTION_DIST) {
+            digitalWrite(pinMotorRight, HIGH);
+            Serial.print("RIGHT MOTOR | ");
+          }
         }
+        Serial.println(); // End the line
         
-      } else {
-        // If the pulse is in the "OFF" phase, turn everything off
+      } else { // --- PULSE OFF PHASE ---
         digitalWrite(pinBuzzer, LOW);
         digitalWrite(pinMotorLeft, LOW);
         digitalWrite(pinMotorCentre, LOW);
         digitalWrite(pinMotorRight, LOW);
+        Serial.println("PULSE OFF");
       }
     }
   } else {
-    // If no object is detected, ensure all outputs stay off
+    // No objects in range
     digitalWrite(pinBuzzer, LOW);
     digitalWrite(pinMotorLeft, LOW);
     digitalWrite(pinMotorCentre, LOW);
     digitalWrite(pinMotorRight, LOW);
-    pulseState = false; // Reset pulse state
+    pulseState = false; 
+
+    // Print this only once when the object leaves the range, so we don't spam the console
+    if (wasInRange) {
+      Serial.println("--- CLEAR: No objects within 200cm ---");
+      wasInRange = false;
+    }
   }
 }
 
 void loop() {
-  // modeButton.update();
-  // feedbackMode currentMode = modeButton.getMode();
+  // --- SCENARIO TESTING ZONE ---
+  // Change these numbers, hit Upload, and watch the Serial Monitor!
   
-  // --- PLACEHOLDER SENSOR LOGIC ---
-  // In your actual code, you will use the 16 zones (4x4 matrix) of your VL53L7CX 
-  // ToF sensors and the ultrasonic data to calculate these two variables:
-  float detectedDistance = 85.5; // Example: Object is 85.5cm away
-  ObjectDirection detectedDirection = CENTRE_RIGHT; // Example direction
-  feedbackMode currentMode = BOTH; // Example mode
+  float distanceLeft = 250.0;       // Left is Clear (over 200)
+  float distanceCenter = 120.0;     // Centre ToF sees object at 120cm
+  float distanceRight = 115.0;      // Right ToF sees object at 115cm
+  float distanceUltrasonic = 130.0; // Ultrasonic confirms object ahead
   
-  // Apply the dynamic feedback
-  applyDirectionalFeedback(detectedDistance, detectedDirection, currentMode);
+  feedbackMode currentMode = BOTH; 
+  
+  applyZoneFeedback(distanceLeft, distanceCenter, distanceRight, distanceUltrasonic, currentMode);
 }
