@@ -27,20 +27,32 @@ void setup() {
 }
 
 // Placeholder Sensor Inputs (In real life, replace these with sensor.read())
-float rawL = 50.0;  // Danger on left!
-float rawC = 180.0; // Distant ahead
+float rawL = 250.0;  // Danger on left!
+float rawC = 10.0; // Distant ahead
 float rawR = 250.0; // Clear
-float rawU = 150.0; // Ultrasonic backup sees closer than Center ToF
-float minCenter = min(rawC, rawU);
-float minAll = min(rawL, min(rawR, minCenter));
+float rawU = 250.0; // Ultrasonic backup sees closer than Center ToF
+
+
+unsigned long increaseDistanceTime = 0;
 
 void loop() {
   // Check for button press
   feedbackButton.update();
   // Update feedback devices
+
+  float minCenter = min(rawC, rawU);
+  float minAll = min(rawL, min(rawR, minCenter));
+
   feedbackMode currentFeedbackMode = feedbackButton.getFeedbackMode();
   audioFeedback.update(currentFeedbackMode, minAll);
   hapticFeedbackLeft.update(currentFeedbackMode, rawL);
   hapticFeedbackMiddle.update(currentFeedbackMode, rawC);
   hapticFeedbackRight.update(currentFeedbackMode, rawR);
+
+  //TESTING DISTANCE INCREASING
+  if (millis() - increaseDistanceTime >= 1000) {
+    increaseDistanceTime = millis();
+    rawC += 10.0;
+    Serial.println(rawC);
+  }
 }

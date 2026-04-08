@@ -7,6 +7,7 @@ enum feedbackMode {
     HAPTIC,
     AUDIO,
     BOTH,
+    OFF,
     NUM_FEEDBACK_MODES
 };
 
@@ -22,11 +23,6 @@ public:
     void turnOn();
     // Turns the feedback device off
     void turnOff();
-    // Turns the feedback device off if it is on and the other way around
-    // Off -> On
-    // On -> Off
-    // The time at which this happens is stored in switchOnOffTime
-    void switchOnOff();
     // Performs the logic for the directional feedback
     void directionalFeedback(float rawData);
     // Main function that should be called in loop()
@@ -41,8 +37,7 @@ private:
     // Variables for switching modes
     enum Mode {
         DIRECTIONAL_FEEDBACK,
-        SWITCH_MODE_FEEDBACK,
-        IDLE
+        SWITCH_MODE_FEEDBACK
     };
     Mode mode = DIRECTIONAL_FEEDBACK;
     feedbackMode previousFeedbackMode = NUM_FEEDBACK_MODES;
@@ -58,6 +53,11 @@ private:
     float MIN_DIST = 10.0;
     float SMOOTHING_ALPHA = 0.3;
     float filteredDist;
+
+    unsigned long turnedOnTime = 0;
+    unsigned long startIntervalTime = 0;
+    unsigned long longFeedbackPulse = 500;
+    unsigned long shortFeedbackPulse = 100;
 };
 
 #endif //FEEDBACK_DEVICE_HPP

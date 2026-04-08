@@ -14,6 +14,7 @@ void FeedbackDevice::setup() {
 }
 
 void FeedbackDevice::turnOn() {
+    turnedOnTime = millis();
     digitalWrite(pin, HIGH);
     state = true;
 }
@@ -23,27 +24,20 @@ void FeedbackDevice::turnOff() {
     state = false;
 }
 
-void FeedbackDevice::switchOnOff() {
-    switchOnOffTime = millis();
-    state = !state;
-    digitalWrite(pin, state ? HIGH : LOW);
-}
-
 void FeedbackDevice::directionalFeedback(float rawDist) {
-    if (mode != DIRECTIONAL_FEEDBACK) {
-        return;
-    }
-
     filteredDist = smooth(rawDist, filteredDist);
-
     if (filteredDist > 0 && filteredDist <= MAX_DIST) {
-        int interval = map(constrain(filteredDist, MIN_DIST, MAX_DIST), MIN_DIST, MAX_DIST, 60, 600);
-        
-        if (millis() - switchOnOffTime >= interval) {
-            switchOnOff();
+        int interval = map(constrain(filteredDist, MIN_DIST, MAX_DIST), MIN_DIST, MAX_DIST, shortFeedbackPulse, shortFeedbackPulse*10);
+        if (!state && millis() - startIntervalTime >= interval) {
+            startIntervalTime = millis();
+            turnOn();
         }
     }
     else {
+        turnOff();
+    }
+
+    if (state && millis() - turnedOnTime >= shortFeedbackPulse) {
         turnOff();
     }
 }
@@ -51,7 +45,6 @@ void FeedbackDevice::directionalFeedback(float rawDist) {
 void FeedbackDevice::update(feedbackMode currentFeedbackMode, float rawDist) {
     // Check if the device should be idle
     if (currentFeedbackMode != deviceFeedbackMode && currentFeedbackMode != BOTH) {
-        mode = IDLE;
         turnOff();
         return;
     }
