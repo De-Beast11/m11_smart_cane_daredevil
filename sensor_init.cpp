@@ -139,16 +139,34 @@ void sensors::ultrasound() {
         Serial.println(510); */
     }
 }
-void sensors::time_of_flight(){
+// Precomputed zone constants — fixed by sensor geometry, never recalculated
+static constexpr float DEG2RAD_TOF = 3.14159265f / 180.0f;
+static constexpr float zone_v_deg[4]  = { 16.875f,  5.625f, -5.625f, -16.875f };
+// cos(h) per column: x=0→+16.875°, x=1→+5.625°, x=2→-5.625°, x=3→-16.875°
+// cos is symmetric so cos(+h)==cos(-h)
+static constexpr float cos_zone_h[4]  = { 0.9570f,  0.9952f,  0.9952f,  0.9570f };
+
+void sensors::time_of_flight(float pitch_deg){
     if (Imager.isDataReady()){
         if (Imager.getRangingData(&measurementData)){
             for (int y = 0; y <= 4 * (4 - 1); y += 4){
+                int row = y / 4;
                 for (int x = 4 - 1; x >= 0; x--){
+                    float v_total_rad = (zone_v_deg[row] + pitch_deg) * DEG2RAD_TOF;
                     Serial.print("\t");
-                    if (measurementData.target_status[x + y] == 5)
-                        Serial.print(measurementData.distance_mm[x + y]);
-                    else
+                    if (measurementData.target_status[x + y] == 5){
+                        float dist  = measurementData.distance_mm[x + y];
+                        float y_mm  = dist * sinf(v_total_rad);                   // vertical height
+                        float x_mm  = dist * cosf(v_total_rad) * cos_zone_h[x];  // forward ground distance
+                        Serial.print(dist, 0);
+                        Serial.print("mm(x:");
+                        Serial.print(x_mm, 1);
+                        Serial.print("mm,y:");
+                        Serial.print(y_mm, 1);
+                        Serial.print("mm)");
+                    } else {
                         Serial.print("----");
+                    }
                 }
                 Serial.println();
             }

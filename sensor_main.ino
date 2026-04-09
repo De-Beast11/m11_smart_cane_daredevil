@@ -46,8 +46,7 @@ void loop(){
     Serial.println(quaternion_out[3]);*/ 
 
     Sensor.ultrasound();
-    Serial.print(" P:"); Serial.print(euler[1]);
-   // Sensor.time_of_flight();
+    Sensor.time_of_flight(euler[1]);
 
     delay(10);
 }
