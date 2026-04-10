@@ -25,7 +25,7 @@ VL53L5CX_ResultsData measurementData;
 void sensors::init(){
     Serial.println("TEST HERE");
     ultrasonicSensor.begin(Serial);
-    measureDelay.start(1000, AsyncDelay::MILLIS);  
+    measureDelay.start(1000, AsyncDelay::MILLIS);
     delay(1000);
     // Initialize Wire1 and Wire2 for I2C Connection
     Wire.begin(SDA_1, SCL_1);
@@ -107,70 +107,82 @@ void sensors::accel_calibration(){
     accel_bias[2] -= 9.81;
 }
 
-int lastValidDistance = 0; 
+int lastValidDistance = 0;
 int glitchCount = 0; // Counts how many "bad" samples we've seen in a row
 
 void sensors::ultrasound() {
     if (measureDelay.isExpired()) {
         measureDelay.repeat();
-        
+
         int x = ultrasonicSensor.readDistance();
 
         // Check if the reading is "bad"
         if (x >= 500 || x <= 0) {
             glitchCount++; // We found a potential glitch
-            
+
             if (glitchCount == 1) {
                 // STRIKE ONE: Use the previous value instead of the 505
-                x = lastValidDistance; 
-            } 
+                x = lastValidDistance;
+            }
             // If glitchCount is 2 or more, we stop filtering and let the 505 through
         } else {
             // If the reading is GOOD, reset the glitch counter
             glitchCount = 0;
             lastValidDistance = x;
         }
-
-        // Plotting
-        /*Serial.print(0);
-        Serial.print(" ");
-        Serial.print(x); 
-        Serial.print(" ");
-        Serial.println(510); */
     }
 }
 // Precomputed zone constants — fixed by sensor geometry, never recalculated
-static constexpr float DEG2RAD_TOF = 3.14159265f / 180.0f;
+// 4x4 resolution, 45° per-axis FoV: angle_step = 45°/4 = 11.25°
+// Zone center offsets: ±1.5 and ±0.5 steps → 16.875°, 5.625°, -5.625°, -16.875°
+static constexpr float DEG2RAD_TOF    = 3.14159265f / 180.0f;
 static constexpr float zone_v_deg[4]  = { 16.875f,  5.625f, -5.625f, -16.875f };
-// cos(h) per column: x=0→+16.875°, x=1→+5.625°, x=2→-5.625°, x=3→-16.875°
-// cos is symmetric so cos(+h)==cos(-h)
-static constexpr float cos_zone_h[4]  = { 0.9570f,  0.9952f,  0.9952f,  0.9570f };
+static constexpr float tan_zone_v[4]  = { 0.30335f, 0.09849f, -0.09849f, -0.30335f };
+static constexpr float MAX_FORWARD_MM = 2000.0f;
+static constexpr float DUMMY_Z        = 100000.0f;
 
 void sensors::time_of_flight(float pitch_deg){
     if (Imager.isDataReady()){
         if (Imager.getRangingData(&measurementData)){
-            for (int y = 0; y <= 4 * (4 - 1); y += 4){
+            float theta_rad = pitch_deg * DEG2RAD_TOF;
+            float cos_t = cosf(theta_rad);
+            float sin_t = sinf(theta_rad);
+
+            // Fill Z array: 16 zones, dummy value if invalid or X too large
+            float Z[16];
+            for (int y = 0; y < 16; y += 4){
                 int row = y / 4;
-                for (int x = 4 - 1; x >= 0; x--){
-                    float v_total_rad = (zone_v_deg[row] + pitch_deg) * DEG2RAD_TOF;
-                    Serial.print("\t");
-                    if (measurementData.target_status[x + y] == 5){
-                        float dist  = measurementData.distance_mm[x + y];
-                        float y_mm  = dist * sinf(v_total_rad);                   // vertical height
-                        float x_mm  = dist * cosf(v_total_rad) * cos_zone_h[x];  // forward ground distance
-                        Serial.print(dist, 0);
-                        Serial.print("mm(x:");
-                        Serial.print(x_mm, 1);
-                        Serial.print("mm,y:");
-                        Serial.print(y_mm, 1);
-                        Serial.print("mm)");
+                float tan_v = tan_zone_v[row];
+                for (int x = 0; x < 4; x++){
+                    int idx = x + y;
+                    if (measurementData.target_status[idx] == 5){
+                        float dist = measurementData.distance_mm[idx];
+                        float X = dist * (cos_t - tan_v * sin_t);
+                        Z[idx] = (X > MAX_FORWARD_MM) ? DUMMY_Z : dist * (sin_t + tan_v * cos_t);
                     } else {
-                        Serial.print("----");
+                        Z[idx] = DUMMY_Z;
                     }
                 }
-                Serial.println();
             }
-            Serial.println();
+
+            // Compute min Z per column group: left=col3, mid=col2+col1, right=col0
+            float min_left  = DUMMY_Z;
+            float min_mid   = DUMMY_Z;
+            float min_right = DUMMY_Z;
+            for (int y = 0; y < 16; y += 4){
+                if (Z[3 + y] < min_left)  min_left  = Z[3 + y];
+                if (Z[2 + y] < min_mid)   min_mid   = Z[2 + y];
+                if (Z[1 + y] < min_mid)   min_mid   = Z[1 + y];
+                if (Z[0 + y] < min_right) min_right = Z[0 + y];
+            }
+
+            Serial.print("L:");
+            if (min_left  < DUMMY_Z) Serial.print(min_left,  0); else Serial.print("----");
+            Serial.print("mm  M:");
+            if (min_mid   < DUMMY_Z) Serial.print(min_mid,   0); else Serial.print("----");
+            Serial.print("mm  R:");
+            if (min_right < DUMMY_Z) Serial.print(min_right, 0); else Serial.print("----");
+            Serial.println("mm");
         }
     }
 }

@@ -123,9 +123,9 @@ void OrientationEKF::quat2euler(const std::array<float,STATES> q,
     roll = atan2(2.0f*(q[0]*q[1]+q[2]*q[3]), 1-2.0f*(q[1]*q[1]+q[2]*q[2]));
     pitch = asin(2.0f*(q[0]*q[2]-q[3]*q[1]));
     yaw = atan2(2.0f*(q[0]*q[3]+q[1]*q[2]), 1-2.0f*(q[2]*q[2]+q[3]*q[3]));
-    roll_deg = roll * (-180/test_PI);
-    pitch_deg = pitch * (-180/test_PI);
-    yaw_deg = yaw * (-180/test_PI);
+    roll_deg = roll * (180/test_PI);
+    pitch_deg = pitch * (180/test_PI);
+    yaw_deg = yaw * (180/test_PI);
     euler = {roll_deg, pitch_deg, yaw_deg};
 }
 

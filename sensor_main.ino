@@ -35,19 +35,14 @@ void loop(){
     Orientation.orientation(Sensor.getIMU());
     quaternion_out = Orientation.current_state();
     std::array<float, 3> euler;
-    Orientation.quat2euler(quaternion_out, euler);                      
-    Serial.print("Pitch: ");                
-    Serial.println(euler[1]);
-
-   /*
-   Serial.print(quaternion_out[0]); Serial.print(",");
-    Serial.print(quaternion_out[1]); Serial.print(",");
-    Serial.print(quaternion_out[2]); Serial.print(",");
-    Serial.println(quaternion_out[3]);*/ 
+    Orientation.quat2euler(quaternion_out, euler);
+    Serial.print("Roll:"); Serial.print(euler[0],2);
+    Serial.print(" Pitch:"); Serial.print(euler[1],2);
+    Serial.print(" Yaw:"); Serial.println(euler[2],2);
 
     Sensor.ultrasound();
     Sensor.time_of_flight(euler[1]);
 
-    delay(10);
+    delay(1000);
 }
 

@@ -24,7 +24,7 @@ class sensors{
     void gyro_calibration();
     void accel_calibration();
     void ultrasound();
-    void time_of_flight();
+    void time_of_flight(float pitch_deg);
     const std::array<float, 9>& getIMU();
     const std::array<float, 3>& getGyr();
     const std::array<float, 3>& getAcc();
