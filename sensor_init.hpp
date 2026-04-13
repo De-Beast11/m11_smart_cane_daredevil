@@ -12,6 +12,8 @@ class sensors{
     std::array<float, 3> accel_bias;
     std::array<float, 3> mag;
     std::array<float, 3> mag_bias;
+    std::array<float, 3> ToF_out;
+    int x;
 
     public:
         sensors(){
@@ -23,8 +25,8 @@ class sensors{
     void init();
     void gyro_calibration();
     void accel_calibration();
-    void ultrasound();
-    void time_of_flight(float pitch_deg);
+    int ultrasound();
+    std::array<float, 3> time_of_flight(float pitch_deg);
     const std::array<float, 9>& getIMU();
     const std::array<float, 3>& getGyr();
     const std::array<float, 3>& getAcc();

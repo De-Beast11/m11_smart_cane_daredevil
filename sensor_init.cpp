@@ -110,11 +110,11 @@ void sensors::accel_calibration(){
 int lastValidDistance = 0;
 int glitchCount = 0; // Counts how many "bad" samples we've seen in a row
 
-void sensors::ultrasound() {
+int sensors::ultrasound() {
     if (measureDelay.isExpired()) {
         measureDelay.repeat();
 
-        int x = ultrasonicSensor.readDistance();
+       x  = ultrasonicSensor.readDistance() * 10;
 
         // Check if the reading is "bad"
         if (x >= 500 || x <= 0) {
@@ -131,6 +131,7 @@ void sensors::ultrasound() {
             lastValidDistance = x;
         }
     }
+    return x;
 }
 // Precomputed zone constants — fixed by sensor geometry, never recalculated
 // 4x4 resolution, 45° per-axis FoV: angle_step = 45°/4 = 11.25°
@@ -138,10 +139,10 @@ void sensors::ultrasound() {
 static constexpr float DEG2RAD_TOF    = 3.14159265f / 180.0f;
 static constexpr float zone_v_deg[4]  = { 16.875f,  5.625f, -5.625f, -16.875f };
 static constexpr float tan_zone_v[4]  = { 0.30335f, 0.09849f, -0.09849f, -0.30335f };
-static constexpr float MAX_FORWARD_MM = 2000.0f;
+static constexpr float Max_Upward_mm = 1200.0f;
 static constexpr float DUMMY_Z        = 100000.0f;
 
-void sensors::time_of_flight(float pitch_deg){
+std::array<float,3> sensors::time_of_flight(float pitch_deg){
     if (Imager.isDataReady()){
         if (Imager.getRangingData(&measurementData)){
             float theta_rad = pitch_deg * DEG2RAD_TOF;
@@ -158,7 +159,7 @@ void sensors::time_of_flight(float pitch_deg){
                     if (measurementData.target_status[idx] == 5){
                         float dist = measurementData.distance_mm[idx];
                         float X = dist * (cos_t - tan_v * sin_t);
-                        Z[idx] = (X > MAX_FORWARD_MM) ? DUMMY_Z : dist * (sin_t + tan_v * cos_t);
+                        Z[idx] = (X > Max_Upward_mm) ? DUMMY_Z : dist * (sin_t + tan_v * cos_t);
                     } else {
                         Z[idx] = DUMMY_Z;
                     }
@@ -176,6 +177,9 @@ void sensors::time_of_flight(float pitch_deg){
                 if (Z[0 + y] < min_right) min_right = Z[0 + y];
             }
 
+            ToF_out[0] = min_left;
+            ToF_out[1] = min_mid;
+            ToF_out[2] = min_right;
             Serial.print("L:");
             if (min_left  < DUMMY_Z) Serial.print(min_left,  0); else Serial.print("----");
             Serial.print("mm  M:");
@@ -185,4 +189,8 @@ void sensors::time_of_flight(float pitch_deg){
             Serial.println("mm");
         }
     }
+    
+    return ToF_out;
 }
+
+

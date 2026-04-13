@@ -40,8 +40,11 @@ void loop(){
     Serial.print(" Pitch:"); Serial.print(euler[1],2);
     Serial.print(" Yaw:"); Serial.println(euler[2],2);
 
-    Sensor.ultrasound();
-    Sensor.time_of_flight(euler[1]);
+    int ultrasonic =  Sensor.ultrasound();
+    std::array<float, 3> ToF_output = Sensor.time_of_flight(euler[1]);
+    
+    if (ToF_output[1] > ultrasonic)  ToF_output[1] = ultrasonic;
+    
 
     delay(1000);
 }
