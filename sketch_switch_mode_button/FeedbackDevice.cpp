@@ -20,7 +20,6 @@ void FeedbackDevice::turnOn() {
 }
 
 void FeedbackDevice::turnOff() {
-    turnedOffTime = millis();
     digitalWrite(pin, LOW);
     state = false;
 }
@@ -43,7 +42,7 @@ void FeedbackDevice::directionalFeedback(float rawDist) {
     }
 }
 
-void FeedbackDevice::update(feedbackMode currentFeedbackMode, float rawDist, bool lowBattery) {
+void FeedbackDevice::update(feedbackMode currentFeedbackMode, float rawDist) {
     // Check if the device should be idle
     if (currentFeedbackMode != deviceFeedbackMode && currentFeedbackMode != BOTH) {
         turnOff();
@@ -57,13 +56,6 @@ void FeedbackDevice::update(feedbackMode currentFeedbackMode, float rawDist, boo
         mode = SWITCH_MODE_FEEDBACK;
     }
 
-    // Check if the battery is low
-    // Only allow if there is no switch mode feedback currently
-    if (lowBattery && mode != SWITCH_MODE_FEEDBACK && millis() - timePreviousLowBatteryFeedback >= timeBetweenLowBatteryFeedback) {
-        turnOff();
-        mode = LOW_BATTERY_FEEDBACK;
-    }
-
     // Notify the user about the feedback change by applying that feedback for an amout of time
     if (mode == SWITCH_MODE_FEEDBACK) {
         if (!state) {
@@ -73,41 +65,6 @@ void FeedbackDevice::update(feedbackMode currentFeedbackMode, float rawDist, boo
         if (state && millis() - fbModeChangedTime >= switchModeFbDuration) {
             turnOff();
             mode = DIRECTIONAL_FEEDBACK;
-        }
-    }
-
-    // Notify the user about a low battery by applying two long burst back to back
-    if (mode == LOW_BATTERY_FEEDBACK) {
-        switch (lowBatteryState) {
-            case IDLE:
-                pulseCount = 0;
-                lowBatteryState = PULSE_ON;
-                stateStartTime = millis();
-                turnOn();
-                break;
-            case PULSE_ON:
-                if (millis() - stateStartTime >= longFeedbackPulse) {
-                    lowBatteryState = PULSE_OFF;
-                    turnOff();
-                    stateStartTime = millis();
-                    break;
-                }
-            case PULSE_OFF:
-                if (millis() - stateStartTime >= longFeedbackPulse) {
-                    pulseCount++;
-
-                    if (pulseCount >= maxPulseCount) {
-                        lowBatteryState = IDLE;
-                        timePreviousLowBatteryFeedback = millis();
-                        mode = DIRECTIONAL_FEEDBACK;
-                    }
-                    else {
-                        turnOn();
-                        stateStartTime = millis();
-                        lowBatteryState = PULSE_ON;
-                    }
-                }
-                break;
         }
     }
 

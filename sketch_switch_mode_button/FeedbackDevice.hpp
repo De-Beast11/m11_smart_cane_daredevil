@@ -8,7 +8,6 @@ enum feedbackMode {
     AUDIO,
     BOTH,
     OFF,
-    LOW_BATTERY
     NUM_FEEDBACK_MODES
 };
 
@@ -28,53 +27,37 @@ public:
     void directionalFeedback(float rawData);
     // Main function that should be called in loop()
     // Performs the mode switching feedback and the directional feedback by calling helper functions
-    void update(feedbackMode currentFeedbackMode, float rawData, bool lowBattery);
+    void update(feedbackMode currentFeedbackMode, float rawData);
 
 private:
     int pin;
     bool state = false; // false = Off, true = On
     unsigned long switchOnOffTime = 0;
-    
 
     // Variables for switching modes
     enum Mode {
         DIRECTIONAL_FEEDBACK,
-        SWITCH_MODE_FEEDBACK,
-        LOW_BATTERY_FEEDBACK
+        SWITCH_MODE_FEEDBACK
     };
     Mode mode = DIRECTIONAL_FEEDBACK;
     feedbackMode previousFeedbackMode = NUM_FEEDBACK_MODES;
     feedbackMode deviceFeedbackMode;
     // Variables for switch mode feedback
     unsigned long fbModeChangedTime = 0;
-    const unsigned long switchModeFbDuration = 1500;
+    unsigned long switchModeFbDuration = 1500;
 
     // Methods for directional feedback
     float smooth(float current, float previous);
     // Variables for directional feedback
-    const float MAX_DIST = 200.0;
-    const float MIN_DIST = 10.0;
-    const float SMOOTHING_ALPHA = 0.3;
+    float MAX_DIST = 200.0;
+    float MIN_DIST = 10.0;
+    float SMOOTHING_ALPHA = 0.3;
     float filteredDist;
 
     unsigned long turnedOnTime = 0;
-    unsigned long turnedOffTime = 0;
     unsigned long startIntervalTime = 0;
-    const unsigned long longFeedbackPulse = 500;
-    const unsigned long shortFeedbackPulse = 100;
-
-    // Variables for low battery feedback
-    enum LowBatteryState {
-        IDLE,
-        PULSE_ON,
-        PULSE_OFF
-    };
-    LowBatteryState lowBatteryState = IDLE;
-    int pulseCount = 0;
-    int maxPulseCount = 2;
-    unsigned long stateStartTime = 0;
-    unsigned long timePreviousLowBatteryFeedback = millis();
-    const unsigned long timeBetweenLowBatteryFeedback = 5000;
+    unsigned long longFeedbackPulse = 500;
+    unsigned long shortFeedbackPulse = 100;
 };
 
 #endif //FEEDBACK_DEVICE_HPP
