@@ -9,6 +9,10 @@ bool FeedbackDevice::getState() {
     return state;
 }
 
+int FeedbackDevice::getFBMode(){
+    return deviceFeedbackMode
+}
+
 void FeedbackDevice::setup() {
     pinMode(pin, OUTPUT);
 }

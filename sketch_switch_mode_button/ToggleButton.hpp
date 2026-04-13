@@ -12,7 +12,7 @@ public:
     // Sets up the button pin
     void setup();
     // Checks for button press and updates feedback mode and feedback devices accordingly
-    void update(); 
+    void update(bool forced = false, feedbackMode prev_forced = NONE); 
     // Returns the current feedback mode
     feedbackMode getFeedbackMode();
 
