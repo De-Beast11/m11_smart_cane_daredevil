@@ -3,13 +3,25 @@
 
 #include <Arduino.h>
 
+enum feedbackMode {
+    NONE,
+    HAPTIC,
+    AUDIO,
+    BOTH,
+    WARNING,
+    OFF,
+    LOW_BATTERY
+    NUM_FEEDBACK_MODES
+};
 
 class FeedbackDevice {
 public:
-    FeedbackDevice(int pinFbDevice);  
-
-    bool getState() const;
-
+    // Constructor assigns the pin number and feedback mode of the device
+    FeedbackDevice(int fbDevicePin, feedbackMode fbMode);
+    // Returns the state of the device: false = Off, true = On
+    bool getState();
+    int getFBMode();
+    // Sets up the feedback device pin
     void setup();
 
     void turnOn();
@@ -17,10 +29,10 @@ public:
     void turnOff();
 
     void directionalFeedback(float rawData);
-    // Returns true when the switch mode feedback is finisched, false otherwise
-    bool switchModeFeedback();
+    // Main function that should be called in loop()
+    // Performs the mode switching feedback and the directional feedback by calling helper functions
+    void update(feedbackMode currentFeedbackMode, float rawData, bool lowBattery);
 
-    void lowBatteryFeedback();
 private:
     float smooth(float current, float previous);
 

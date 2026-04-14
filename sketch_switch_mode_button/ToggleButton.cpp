@@ -8,7 +8,7 @@ void ToggleButton::setup() {
     pinMode(pin, INPUT_PULLUP);
 }
 
-void ToggleButton::update(bool lowBattery) {
+void ToggleButton::update(bool forced, feedbackMode prev_forced) {
     bool buttonState = digitalRead(pin);
 
     if (buttonState != lastButtonState) {
@@ -22,17 +22,12 @@ void ToggleButton::update(bool lowBattery) {
             stableState = buttonState;
 
             // Detect button press (HIGH -> LOW)
-            if (stableState == LOW) {
-                if (lowBattery && !lowBatteryAcknowledged) {
-                    lowBatteryAcknowledged = true;
-                }
-                else {
-                    mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
-                    Serial.print("BUTTON PRESSED, Feedback Mode: ");
-                    Serial.println(mode);
-                }
-                
+            if (stableState == LOW && !forced) {
+                mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
+                Serial.print("BUTTON PRESSED, Feedback Mode: ");
+                Serial.println(mode);
             }
+            else mode = prev_forced;
         }
     }
 
