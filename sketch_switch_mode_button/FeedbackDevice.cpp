@@ -71,6 +71,30 @@ bool FeedbackDevice::switchModeFeedback() {
     return false;
 }
 
+void FeedbackDevice::lowBatteryFeedback() {
+    unsigned long now = millis();
+    switch (state) {
+        case ON:
+            if (firstTimeLowBatteryFeedback) {
+                if (now - stateStartTime >= firstLowBatteryFeedbackDuration) {
+                    turnOff();
+                    firstTimeLowBatteryFeedback = false;
+                }
+            }
+            else {
+                if (now - stateStartTime >= longFeedbackPulse) {
+                    turnOff();
+                }
+            }
+            break;
+        case OFF:
+            if (now - stateStartTime >= longFeedbackPulse) {
+                turnOn();
+            }
+            break;
+    }
+}
+
 float FeedbackDevice::smooth(float current, float previous) {
     return (SMOOTHING_ALPHA * current) + (1.0 - SMOOTHING_ALPHA) * previous;
 }

@@ -19,6 +19,8 @@ public:
     void directionalFeedback(float rawData);
     // Returns true when the switch mode feedback is finisched, false otherwise
     bool switchModeFeedback();
+
+    void lowBatteryFeedback();
 private:
     float smooth(float current, float previous);
 
@@ -36,6 +38,9 @@ private:
     enum State {ON, OFF};
     State state = OFF;
     unsigned long stateStartTime = 0;
+
+    bool firstTimeLowBatteryFeedback = true;
+    const unsigned long firstLowBatteryFeedbackDuration = 3000;
 };
 
 #endif //FEEDBACK_DEVICE_HPP

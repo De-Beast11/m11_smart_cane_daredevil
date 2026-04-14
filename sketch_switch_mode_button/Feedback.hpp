@@ -21,13 +21,6 @@ public:
     void update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound, bool lowBattery);
 
 private:
-    void updateArtificialDistance();
-    
-    float artificialDistance = 10.0;
-    bool artificialDistanceIncreasing = true;
-    unsigned long previousUpdateArtificialDistance = 0;
-    const unsigned long timeBetweenArtificialDistanceUpdates = 500;
-
     feedbackMode previousFeedbacMode = NUM_FEEDBACK_MODES;
 
     FeedbackDevice audio;

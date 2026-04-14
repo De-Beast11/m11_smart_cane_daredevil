@@ -65,35 +65,16 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
         }
         case LOW_BATTERY_FEEDBACK:
         {
-            updateArtificialDistance();
             // Pass distance to devices
             if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
-                audio.directionalFeedback(artificialDistance);
+                audio.lowBatteryFeedback();
             }
             if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
-                hapticLeft.directionalFeedback(artificialDistance);
-                hapticMiddle.directionalFeedback(artificialDistance);
-                hapticRight.directionalFeedback(artificialDistance);
+                hapticLeft.lowBatteryFeedback();
+                hapticMiddle.lowBatteryFeedback();
+                hapticRight.lowBatteryFeedback();
             }
             break;
         }
     }
-}
-
-void Feedback::updateArtificialDistance() {
-    unsigned long now = millis();
-    
-    if (now - previousUpdateArtificialDistance >= timeBetweenArtificialDistanceUpdates) {
-        artificialDistance += artificialDistanceIncreasing ? 10.0 : -10.0;
-        if (artificialDistance >= 200.0) {
-            artificialDistance = 200.0;
-            artificialDistanceIncreasing = false;
-        }
-        else if (artificialDistance <= 10.0) {
-            artificialDistance = 10.0;
-            artificialDistanceIncreasing = true;
-        }
-        previousUpdateArtificialDistance = now;
-    }
-
 }
