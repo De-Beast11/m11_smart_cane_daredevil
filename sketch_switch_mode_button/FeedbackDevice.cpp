@@ -14,10 +14,14 @@ void FeedbackDevice::setup() {
 
 void FeedbackDevice::turnOn() {
     digitalWrite(pin, HIGH);
+    state = ON;
+    stateStartTime = millis();
 }
 
 void FeedbackDevice::turnOff() {
     digitalWrite(pin, LOW);
+    state = OFF;
+    stateStartTime = millis();
 }
 
 void FeedbackDevice::directionalFeedback(float rawDist) {
@@ -36,22 +40,35 @@ void FeedbackDevice::directionalFeedback(float rawDist) {
     switch (state) {
         case ON:
             if (now - stateStartTime >= shortFeedbackPulse) {
-                turnOff();
-                state = OFF;
-                stateStartTime = now;
+                turnOff();   
             }
             break;
         case OFF:
             if (now - stateStartTime >= interval) {
                 turnOn();
-                state = ON;
-                stateStartTime = now;
             }
             break;
         default:    
             turnOff();
             break;
     }
+}
+
+
+bool FeedbackDevice::switchModeFeedback() {
+    unsigned long now = millis();
+    switch (state) {
+        case ON:
+            if (now - stateStartTime >= switchModeFbDuration) {
+                turnOff();
+                return true;
+            }
+            break;
+        case OFF:
+            turnOn();
+            break;
+    }
+    return false;
 }
 
 float FeedbackDevice::smooth(float current, float previous) {

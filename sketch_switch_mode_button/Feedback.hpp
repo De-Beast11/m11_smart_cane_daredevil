@@ -36,9 +36,6 @@ private:
         LOW_BATTERY_FEEDBACK
     };
     Mode mode = DIRECTIONAL_FEEDBACK;
-
-    const unsigned long switchModeFbDuration = 1500;
-    unsigned long startSwitchModeFeedback = 0;
 };
 
 #endif //FEEDBACK_HPP

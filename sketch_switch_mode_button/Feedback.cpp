@@ -17,14 +17,13 @@ void Feedback::setup() {
 void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound) {
     // Check if feedback mode changed
     if (previousFeedbacMode != currentFeedbackMode) {
-        // Check if feedback mode changed during switch mode feedback
-        if (mode = SWITCH_MODE_FEEDBACK) {
-            switchModeTriggered = false;
-            audio.turnOff();
-            hapticLeft.turnOff();
-            hapticMiddle.turnOff();
-            hapticRight.turnOff();
-        }
+        audio.turnOff();
+        hapticLeft.turnOff();
+        hapticMiddle.turnOff();
+        hapticRight.turnOff();
+
+        switchModeTriggered = false;
+
         mode = SWITCH_MODE_FEEDBACK;
         previousFeedbacMode = currentFeedbackMode;
     }
@@ -48,34 +47,19 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
         }
         case SWITCH_MODE_FEEDBACK:
         {
-            // Turn on relevant feedback devices
-            // Execute only when entering this mode for the first time
-            if (!switchModeTriggered) {
-                if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
-                    audio.turnOn();
-                }
-                if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
-                    hapticLeft.turnOn();
-                    hapticMiddle.turnOn();
-                    hapticRight.turnOn();
-                }
-                switchModeTriggered = true;
-                startSwitchModeFeedback = millis();
+            bool finished = false;
+            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
+                finished = audio.switchModeFeedback();
             }
-            // If the feedback devices are turned on, check if enough time has passed to turn them off again
-            if (switchModeTriggered && millis() - startSwitchModeFeedback >= switchModeFbDuration) {
-                if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
-                    audio.turnOff();
-                }
-                if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
-                    hapticLeft.turnOff();
-                    hapticMiddle.turnOff();
-                    hapticRight.turnOff();
-                }
+            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
+                finished = hapticLeft.switchModeFeedback();
+                hapticMiddle.switchModeFeedback();
+                hapticRight.switchModeFeedback();
+            }
+
+            if (finished) {
                 mode = DIRECTIONAL_FEEDBACK;
-                switchModeTriggered = false;
             }
-            break;
         }
         case LOW_BATTERY_FEEDBACK:
         {

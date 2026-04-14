@@ -17,6 +17,9 @@ public:
     void turnOff();
 
     void directionalFeedback(float rawData);
+
+    // Returns true when the switch mode feedback is finisched, false otherwise
+    bool switchModeFeedback();
 private:
     float smooth(float current, float previous);
 
@@ -27,6 +30,7 @@ private:
     const float MIN_DIST = 10.0;
     const float SMOOTHING_ALPHA = 0.3;
 
+    const unsigned long switchModeFbDuration = 1500;
     const unsigned long longFeedbackPulse = 500;
     const unsigned long shortFeedbackPulse = 100;
 

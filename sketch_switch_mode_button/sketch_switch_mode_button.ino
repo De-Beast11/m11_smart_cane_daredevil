@@ -28,7 +28,7 @@ void setup() {
 }
 
 // --- TEST VARIABLES ---
-float rawL = 120.0;  // Left
+float rawL = 200.0;  // Left
 float rawC = 250.0; // Center 
 float rawR = 250.0; // Right
 float rawU = 250.0; // Ultrasonic
