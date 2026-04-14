@@ -13,7 +13,8 @@ void BatteryReadout::update() {
     // Readout ADC
     int rawValue = analogRead(pin);
     // Convert to voltage
-    float voltage = (rawValue / 4095.0) * 3.3;
+    // Factor *2, because of the voltage divider
+    float voltage = (rawValue / 4095.0) * 3.3 * 2;
     // Filter voltage
     filteredVoltage = alpha * voltage + (1 - alpha) * filteredVoltage;
     // Add voltage to previous readings

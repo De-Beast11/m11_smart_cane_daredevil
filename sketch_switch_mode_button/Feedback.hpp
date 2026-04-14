@@ -18,11 +18,9 @@ public:
 
     void setup();
 
-    void update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound);
+    void update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound, bool lowBattery, bool lowBatteryAcknowledged);
 
 private:
-    bool switchModeTriggered = false;
-
     feedbackMode previousFeedbacMode = NUM_FEEDBACK_MODES;
 
     FeedbackDevice audio;
@@ -36,6 +34,8 @@ private:
         LOW_BATTERY_FEEDBACK
     };
     Mode mode = DIRECTIONAL_FEEDBACK;
+
+    bool previousLowBatteryFlag = false;
 };
 
 #endif //FEEDBACK_HPP

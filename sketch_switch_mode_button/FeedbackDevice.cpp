@@ -71,6 +71,22 @@ bool FeedbackDevice::switchModeFeedback() {
     return false;
 }
 
+void FeedbackDevice::lowBatteryFeedback() {
+    unsigned long now = millis();
+    switch (state) {
+        case ON:
+            if (now - stateStartTime >= 1000) {
+                turnOff();
+            }
+            break;
+        case OFF:
+            if (now - stateStartTime >= 1000) {
+                turnOn();
+            }
+            break;
+    }
+}
+
 float FeedbackDevice::smooth(float current, float previous) {
     return (SMOOTHING_ALPHA * current) + (1.0 - SMOOTHING_ALPHA) * previous;
 }

@@ -17,9 +17,11 @@ public:
     void turnOff();
 
     void directionalFeedback(float rawData);
-
     // Returns true when the switch mode feedback is finisched, false otherwise
     bool switchModeFeedback();
+
+    void lowBatteryFeedback();
+
 private:
     float smooth(float current, float previous);
 
