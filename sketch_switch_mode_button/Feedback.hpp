@@ -34,6 +34,7 @@ private:
         LOW_BATTERY_FEEDBACK
     };
     Mode mode = DIRECTIONAL_FEEDBACK;
+    Mode previousMode = DIRECTIONAL_FEEDBACK;
 
     bool previousLowBatteryFlag = false;
 };

@@ -38,6 +38,12 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
         previousFeedbacMode = currentFeedbackMode;
     }
 
+    if (previousMode != mode) {
+        Serial.print("MODE: ");
+        Serial.println(mode);
+        previousMode = mode;
+    }
+
     switch(mode) {
         case DIRECTIONAL_FEEDBACK:
         {
@@ -80,6 +86,7 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
                 hapticMiddle.turnOff();
                 hapticRight.turnOff();
                 mode = DIRECTIONAL_FEEDBACK;
+                previousLowBatteryFlag = lowBattery;
             }
             audio.lowBatteryFeedback();
             hapticLeft.lowBatteryFeedback();
