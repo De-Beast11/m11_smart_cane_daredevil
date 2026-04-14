@@ -10,19 +10,29 @@ public:
 
     bool getState() const;
 
-    unsigned long getTimeTurnedOn() const;
-
     void setup();
 
     void turnOn();
 
     void turnOff();
+
+    void directionalFeedback(float rawData);
 private:
+    float smooth(float current, float previous);
+
     const int pin;
 
-    bool state = false;
+    float filteredDist = 0;
+    const float MAX_DIST = 200.0;
+    const float MIN_DIST = 10.0;
+    const float SMOOTHING_ALPHA = 0.3;
 
-    unsigned long turnedOnTime = 0;
+    const unsigned long longFeedbackPulse = 500;
+    const unsigned long shortFeedbackPulse = 100;
+
+    enum State {ON, OFF};
+    State state = OFF;
+    unsigned long stateStartTime = 0;
 };
 
 #endif //FEEDBACK_DEVICE_HPP

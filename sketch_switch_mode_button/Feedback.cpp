@@ -14,7 +14,7 @@ void Feedback::setup() {
     hapticRight.setup();
 }
 
-void Feedback::update(feedbackMode currentFeedbackMode) {
+void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound) {
     // Check if feedback mode changed
     if (previousFeedbacMode != currentFeedbackMode) {
         // Check if feedback mode changed during switch mode feedback
@@ -31,12 +31,23 @@ void Feedback::update(feedbackMode currentFeedbackMode) {
 
     switch(mode) {
         case DIRECTIONAL_FEEDBACK:
-            audio.turnOff();
-            hapticLeft.turnOff();
-            hapticMiddle.turnOff();
-            hapticRight.turnOff();
+        {
+            // Parse distances
+            float minMiddle = min(distanceMiddle, distanceUltrasound);
+            float minAll = min(distanceLeft, min(distanceRight, minMiddle));
+            // Pass distance to devices
+            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
+                audio.directionalFeedback(minAll);
+            }
+            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
+                hapticLeft.directionalFeedback(distanceLeft);
+                hapticMiddle.directionalFeedback(minMiddle);
+                hapticRight.directionalFeedback(distanceRight);
+            }
             break;
+        }
         case SWITCH_MODE_FEEDBACK:
+        {
             // Turn on relevant feedback devices
             // Execute only when entering this mode for the first time
             if (!switchModeTriggered) {
@@ -65,8 +76,11 @@ void Feedback::update(feedbackMode currentFeedbackMode) {
                 switchModeTriggered = false;
             }
             break;
+        }
         case LOW_BATTERY_FEEDBACK:
+        {
             break;
+        }
     }
 }
 

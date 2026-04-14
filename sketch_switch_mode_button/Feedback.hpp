@@ -18,7 +18,7 @@ public:
 
     void setup();
 
-    void update(feedbackMode currentFeedbackMode);
+    void update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound);
 
 private:
     bool switchModeTriggered = false;

@@ -27,7 +27,13 @@ void setup() {
   feedback.setup();
 }
 
+// --- TEST VARIABLES ---
+float rawL = 120.0;  // Left
+float rawC = 250.0; // Center 
+float rawR = 250.0; // Right
+float rawU = 250.0; // Ultrasonic
+
 void loop() {
   button.update();
-  feedback.update(button.getFeedbackMode());
+  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU);
 }

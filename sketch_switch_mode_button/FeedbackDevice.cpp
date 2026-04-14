@@ -8,19 +8,52 @@ bool FeedbackDevice::getState() const {
     return state;
 }
 
-unsigned long FeedbackDevice::getTimeTurnedOn() const {
-    return turnedOnTime;
-}
-
 void FeedbackDevice::setup() {
     pinMode(pin, OUTPUT);
 }
 
 void FeedbackDevice::turnOn() {
     digitalWrite(pin, HIGH);
-    turnedOnTime = millis();
 }
 
 void FeedbackDevice::turnOff() {
     digitalWrite(pin, LOW);
+}
+
+void FeedbackDevice::directionalFeedback(float rawDist) {
+    // Update filtered distance
+    filteredDist = smooth(rawDist, filteredDist);
+    // Check if the distance is inside the range
+    if (filteredDist < MIN_DIST || filteredDist > MAX_DIST) {
+        turnOff();
+        return;
+    }
+    // Compute blinking interval
+    int interval = map(constrain(filteredDist, MIN_DIST, MAX_DIST), MIN_DIST, MAX_DIST, shortFeedbackPulse, shortFeedbackPulse*10);
+    // Save the time
+    unsigned long now = millis();
+    // Perform switching logic
+    switch (state) {
+        case ON:
+            if (now - stateStartTime >= shortFeedbackPulse) {
+                turnOff();
+                state = OFF;
+                stateStartTime = now;
+            }
+            break;
+        case OFF:
+            if (now - stateStartTime >= interval) {
+                turnOn();
+                state = ON;
+                stateStartTime = now;
+            }
+            break;
+        default:    
+            turnOff();
+            break;
+    }
+}
+
+float FeedbackDevice::smooth(float current, float previous) {
+    return (SMOOTHING_ALPHA * current) + (1.0 - SMOOTHING_ALPHA) * previous;
 }
