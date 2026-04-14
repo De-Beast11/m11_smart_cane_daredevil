@@ -33,7 +33,9 @@ float rawC = 250.0; // Center
 float rawR = 250.0; // Right
 float rawU = 250.0; // Ultrasonic
 
+bool lowBattery = true;
+
 void loop() {
   button.update();
-  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU);
+  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU, lowBattery);
 }
