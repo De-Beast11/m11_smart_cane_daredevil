@@ -14,7 +14,7 @@ public:
     // Check if previous 5 readings were below threshold
     void update();
     // Returns True if battery is low, False otherwise
-    bool getBatteryLow();
+    bool getBatteryLow() const;
 private:
     const int pin;
 

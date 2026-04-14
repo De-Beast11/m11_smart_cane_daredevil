@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "Feedback.hpp"
+#include "FeedbackModes.hpp"
 
 class ToggleButton {
 public:
@@ -12,9 +12,11 @@ public:
     // Sets up the button pin
     void setup();
     // Checks for button press and updates feedback mode and feedback devices accordingly
-    void update(); 
+    void update(bool lowBattery); 
     // Returns the current feedback mode
-    feedbackMode getFeedbackMode();
+    feedbackMode getFeedbackMode() const;
+    // Returns the low battery acknowledged flag
+    bool getLowBatteryAcknowledged() const;
 
 private:
     int pin;
@@ -27,6 +29,8 @@ private:
     unsigned long lastDebounceTime = 0;
     const unsigned long debounceDelay = 50;
     const unsigned long feedbackDuration = 1500;
+
+    bool lowBatteryAcknowledged = false;
 };
 
 #endif

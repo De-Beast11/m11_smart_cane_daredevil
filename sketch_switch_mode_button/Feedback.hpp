@@ -3,14 +3,9 @@
 
 #include <Arduino.h>
 
+#include "FeedbackModes.hpp"
 #include "FeedbackDevice.hpp"
 
-enum feedbackMode {
-    HAPTIC,
-    AUDIO,
-    BOTH,
-    NUM_FEEDBACK_MODES
-};
 
 class Feedback {
 public:
@@ -18,7 +13,7 @@ public:
 
     void setup();
 
-    void update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound, bool lowBattery);
+    void update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound, bool lowBattery, bool lowBatteryAcknowledged);
 
 private:
     feedbackMode previousFeedbacMode = NUM_FEEDBACK_MODES;

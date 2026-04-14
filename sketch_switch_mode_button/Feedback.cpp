@@ -14,7 +14,20 @@ void Feedback::setup() {
     hapticRight.setup();
 }
 
-void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound, bool lowBattery) {
+void Feedback::update(
+    feedbackMode currentFeedbackMode, 
+    float distanceLeft, 
+    float distanceMiddle, 
+    float distanceRight,
+    float distanceUltrasound, 
+    bool lowBattery, 
+    bool lowBatteryAcknowledged
+) {
+    // Check if battery is low
+    if (lowBattery && !lowBatteryAcknowledged) {
+        mode = LOW_BATTERY_FEEDBACK;
+    }
+
     // Check if feedback mode changed
     if (previousFeedbacMode != currentFeedbackMode) {
         audio.turnOff();
@@ -25,11 +38,7 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
         mode = SWITCH_MODE_FEEDBACK;
         previousFeedbacMode = currentFeedbackMode;
     }
-    // Check if battery is low
-    if (lowBattery) {
-        mode = LOW_BATTERY_FEEDBACK;
-    }
-
+    
     switch(mode) {
         case DIRECTIONAL_FEEDBACK:
         {
@@ -65,7 +74,10 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
         }
         case LOW_BATTERY_FEEDBACK:
         {
-            // Pass distance to devices
+            if (!lowBattery || (lowBattery && lowBatteryAcknowledged)) {
+                mode = DIRECTIONAL_FEEDBACK;
+            }
+
             if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
                 audio.lowBatteryFeedback();
             }
