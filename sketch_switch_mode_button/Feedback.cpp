@@ -4,8 +4,7 @@ Feedback::Feedback(int pinAudioFb, int pinHapticFbLeft, int pinHapticFbMiddle, i
 : audio(pinAudioFb),
   hapticLeft(pinHapticFbLeft),
   hapticMiddle(pinHapticFbMiddle),
-  hapticRight(pinHapticFbRight),
-  switchModeTimer(switchModeFbDuration)
+  hapticRight(pinHapticFbRight)
 {}
 
 void Feedback::setup() {
@@ -16,8 +15,7 @@ void Feedback::setup() {
 }
 
 void Feedback::update(feedbackMode currentFeedbackMode) {
-    Serial.println(currentFeedbackMode);
-    if (currentFeedbackMode != previousFeedbacMode) {
+    if (previousFeedbacMode != currentFeedbackMode) {
         mode = SWITCH_MODE_FEEDBACK;
         previousFeedbacMode = currentFeedbackMode;
     }
@@ -43,8 +41,12 @@ void Feedback::update(feedbackMode currentFeedbackMode) {
                 mode = DIRECTIONAL_FEEDBACK;
                 switchModeTriggered = false;
             }
-            if (millis() - audio.getTimeTurnedOn() >= switchModeFbDuration) {
-                
+            if (millis() - hapticLeft.getTimeTurnedOn() >= switchModeFbDuration) {
+                hapticLeft.turnOff();
+                hapticMiddle.turnOff();
+                hapticRight.turnOff();
+                mode = DIRECTIONAL_FEEDBACK;
+                switchModeTriggered = false;
             }
             break;
         case LOW_BATTERY_FEEDBACK:

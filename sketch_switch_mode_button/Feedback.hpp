@@ -4,7 +4,6 @@
 #include <Arduino.h>
 
 #include "FeedbackDevice.hpp"
-#include "Timer.hpp"
 
 enum feedbackMode {
     HAPTIC,
@@ -39,7 +38,6 @@ private:
     Mode mode = DIRECTIONAL_FEEDBACK;
 
     const unsigned long switchModeFbDuration = 1500;
-    Timer switchModeTimer;
 };
 
 #endif //FEEDBACK_HPP
