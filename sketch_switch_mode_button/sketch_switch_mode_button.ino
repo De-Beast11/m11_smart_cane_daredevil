@@ -1,4 +1,3 @@
-#include "FeedbackModes.hpp"
 #include "ToggleButton.hpp"
 #include "Feedback.hpp"
 #include "BatteryReadout.hpp"
@@ -13,6 +12,7 @@ const int pinHapticFeedbackRight = 15;
 // Pin for Power
 const int pinBatteryVoltageReadout = 34;
 
+
 /// Object definitions
 // Objects for Feedback
 ToggleButton button(pinFeedbackModeButton);
@@ -24,7 +24,6 @@ Feedback feedback(
 );
 // Object for Power
 BatteryReadout battery(pinBatteryVoltageReadout);
-
 
 void setup() {
   Serial.begin(115200);
@@ -40,11 +39,8 @@ float rawC = 250.0; // Center
 float rawR = 250.0; // Right
 float rawU = 250.0; // Ultrasonic
 
-bool lowBattery = true;
-
 void loop() {
   battery.update();
-  Serial.println(battery.getBatteryLow());
-  button.update(battery.getBatteryLow());
-  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU, battery.getBatteryLow(), button.getLowBatteryAcknowledged());
+  button.update(battery);
+  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU, battery.getBatteryLow(), battery.getLowBatteryAck());
 }

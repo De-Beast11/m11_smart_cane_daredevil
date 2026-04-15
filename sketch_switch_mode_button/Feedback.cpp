@@ -14,31 +14,34 @@ void Feedback::setup() {
     hapticRight.setup();
 }
 
-void Feedback::update(
-    feedbackMode currentFeedbackMode, 
-    float distanceLeft, 
-    float distanceMiddle, 
-    float distanceRight,
-    float distanceUltrasound, 
-    bool lowBattery, 
-    bool lowBatteryAcknowledged
-) {
-    // Check if battery is low
-    if (lowBattery && !lowBatteryAcknowledged) {
-        mode = LOW_BATTERY_FEEDBACK;
-    }
-
-    // Check if feedback mode changed
+void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, float distanceMiddle, float distanceRight, float distanceUltrasound, bool lowBattery, bool lowBatteryAcknowledged) {
+    //// State handling for the State Machine
     if (previousFeedbacMode != currentFeedbackMode) {
-        audio.turnOff();
-        hapticLeft.turnOff();
-        hapticMiddle.turnOff();
-        hapticRight.turnOff();
-
-        mode = SWITCH_MODE_FEEDBACK;
         previousFeedbacMode = currentFeedbackMode;
+        mode = SWITCH_MODE_FEEDBACK;
+        switchModeState = ENTER;
+        lowBatteryState = IDLE;
     }
-    
+    else if (switchModeState == IDLE) {
+        // Do low battery handling here
+        if (lowBattery && !lowBatteryAcknowledged && lowBatteryState == IDLE) {
+            mode = LOW_BATTERY_FEEDBACK;
+            lowBatteryState = ENTER;
+        }
+        if (lowBattery && lowBatteryAcknowledged && lowBatteryState == UPDATE) {
+            mode = LOW_BATTERY_FEEDBACK;
+            lowBatteryState = EXIT;
+        }
+        if (!lowBattery && lowBatteryState != IDLE) {
+            mode = LOW_BATTERY_FEEDBACK;
+            lowBatteryState = EXIT;
+        }
+        if (switchModeState == IDLE && lowBatteryState == IDLE) {
+            mode = DIRECTIONAL_FEEDBACK;
+        }
+    }
+
+    // State Machine for the different feedback: DIRECTIONAL, SWITCH_MODE, LOW_BATTERY
     switch(mode) {
         case DIRECTIONAL_FEEDBACK:
         {
@@ -58,35 +61,102 @@ void Feedback::update(
         }
         case SWITCH_MODE_FEEDBACK:
         {
-            bool finished = false;
-            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
-                finished = audio.switchModeFeedback();
-            }
-            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
-                finished = hapticLeft.switchModeFeedback();
-                hapticMiddle.switchModeFeedback();
-                hapticRight.switchModeFeedback();
-            }
-
-            if (finished) {
-                mode = DIRECTIONAL_FEEDBACK;
-            }
+            switchModeFeedback(currentFeedbackMode);
+            break;
         }
         case LOW_BATTERY_FEEDBACK:
         {
-            if (!lowBattery || (lowBattery && lowBatteryAcknowledged)) {
-                mode = DIRECTIONAL_FEEDBACK;
-            }
-
-            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
-                audio.lowBatteryFeedback();
-            }
-            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
-                hapticLeft.lowBatteryFeedback();
-                hapticMiddle.lowBatteryFeedback();
-                hapticRight.lowBatteryFeedback();
-            }
+            lowBatteryFeedback(currentFeedbackMode);
             break;
         }
     }
+}
+
+void Feedback::switchModeFeedback(feedbackMode currentFeedbackMode) {
+    switch(switchModeState) {
+        case ENTER:
+            turnOffAll();
+            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
+                audio.turnOn();
+            }
+            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
+                hapticLeft.turnOn();
+                hapticMiddle.turnOn();
+                hapticRight.turnOn();
+            } 
+
+            timeEnterSwitchModeFeedback = millis();
+            switchModeState = UPDATE;
+            break;
+        case UPDATE:
+            if (millis() - timeEnterSwitchModeFeedback >= durationSwitchModeFeedback) {
+                switchModeState = EXIT;
+            }
+            break;
+        case EXIT:
+            turnOffAll();
+            switchModeState = IDLE;
+            break;
+        case IDLE:
+            break;
+    }
+}
+
+void Feedback::lowBatteryFeedback(feedbackMode currentFeedbackMode) {
+    switch (lowBatteryState) {
+    case ENTER:
+    {
+        turnOffAll();
+        feedbackState = OFF;
+        lowBatteryState = UPDATE;
+        break;
+    }
+    case UPDATE:
+    {
+        unsigned long now = millis();
+        if (feedbackState == ON && now - timeSwitchOnOff >= timeBetweenSwitching) {
+            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
+                audio.turnOff();
+            }
+            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
+                hapticLeft.turnOff();
+                hapticMiddle.turnOff();
+                hapticRight.turnOff();
+            } 
+            feedbackState = OFF;
+            timeSwitchOnOff = now;
+        }
+        if (feedbackState == OFF && now - timeSwitchOnOff >= timeBetweenSwitching) {
+            if (currentFeedbackMode == AUDIO || currentFeedbackMode == BOTH) {
+                audio.turnOn();
+            }
+            if (currentFeedbackMode == HAPTIC || currentFeedbackMode == BOTH) {
+                hapticLeft.turnOn();
+                hapticMiddle.turnOn();
+                hapticRight.turnOn();
+            } 
+            feedbackState = ON;
+            timeSwitchOnOff = now;
+        }
+        break;
+    }
+    case EXIT:
+    {
+        turnOffAll();
+        feedbackState = ON;
+        lowBatteryState = IDLE;
+        break;
+    }
+    case IDLE:
+    {
+        break;
+    }
+    }
+}
+
+void Feedback::turnOffAll() {
+    audio.turnOff();
+    hapticLeft.turnOff();
+    hapticMiddle.turnOff();
+    hapticRight.turnOff();
 }

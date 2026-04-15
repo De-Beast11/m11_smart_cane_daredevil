@@ -13,7 +13,7 @@ void BatteryReadout::update() {
     // Readout ADC
     int rawValue = analogRead(pin);
     // Convert to voltage
-    // The *2 is introduced due to the voltage divider
+    // Factor *2, because of the voltage divider
     float voltage = (rawValue / 4095.0) * 3.3 * 2;
     // Filter voltage
     filteredVoltage = alpha * voltage + (1 - alpha) * filteredVoltage;
@@ -36,8 +36,33 @@ void BatteryReadout::update() {
     else {
         batteryLow = false;
     }
+    //// Functionality of low battery ack flag
+    // If the low battery was acked, but the battery is not low anymore -> reset the low battery ack and time between notifications
+    if (!batteryLow && lowBatteryAcknowledged) {
+        lowBatteryAcknowledged = false;
+        timeBetweenLowBatteryNotification = minTimeBetweenLowBatteryNotification;
+    }
+    // If the low battery was acked, but it has been some time -> reset the low battery ack
+    if (lowBatteryAcknowledged && millis() - timeLowBatteryNotificationAcknowledged >= timeBetweenLowBatteryNotification) {
+        lowBatteryAcknowledged = false;
+    }
 }
 
 bool BatteryReadout::getBatteryLow() const {
     return batteryLow;
+}
+
+bool BatteryReadout::getLowBatteryAck() const {
+    return lowBatteryAcknowledged;
+}
+
+void BatteryReadout::setLowBatteryAck(bool flag) {
+    // If the low battery was acked ->
+    // Set the time at which this happened
+    // And increase the time between low battery notifications
+    if (flag) {
+        timeLowBatteryNotificationAcknowledged = millis();
+        timeBetweenLowBatteryNotification *= 2;
+    }
+    lowBatteryAcknowledged = flag;
 }
