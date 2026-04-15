@@ -39,18 +39,23 @@ float rawC = 250.0; // Center
 float rawR = 250.0; // Right
 float rawU = 250.0; // Ultrasonic
 
-bool lowBattery = true;
 bool lowBatteryAcknowledged = false;
 
 unsigned long printTime = 0;
 
 void loop() {
   battery.update();
-  button.update();
+  button.update(battery.getBatteryLow(), lowBatteryAcknowledged);
   feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU, battery.getBatteryLow(), lowBatteryAcknowledged);
+
+  if (!battery.getBatteryLow() && lowBatteryAcknowledged) {
+    lowBatteryAcknowledged = false;
+  }
 
   if (millis() - printTime >= 1000) {
     Serial.println(battery.getBatteryLow());
+    Serial.print("LowBatteryAck: ");
+    Serial.println(lowBatteryAcknowledged);
     printTime = millis();
   }
 }
