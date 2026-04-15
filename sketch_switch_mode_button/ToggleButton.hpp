@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "Feedback.hpp"
+#include "BatteryReadout.hpp"
 
 class ToggleButton {
 public:
@@ -12,7 +13,7 @@ public:
     // Sets up the button pin
     void setup();
     // Checks for button press and updates feedback mode and feedback devices accordingly
-    void update(bool lowBattery, bool& lowBatteryAcknowledged); 
+    void update(BatteryReadout& battery); 
     // Returns the current feedback mode
     feedbackMode getFeedbackMode();
 

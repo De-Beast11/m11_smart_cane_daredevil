@@ -36,8 +36,30 @@ void BatteryReadout::update() {
     else {
         batteryLow = false;
     }
+    //// Functionality of low battery ack flag
+    // If the low battery was acked, but the battery is not low anymore -> reset the low battery ack and time between notifications
+    if (!batteryLow && lowBatteryAcknowledged) {
+        lowBatteryAcknowledged = false;
+        timeBetweenLowBatteryNotification = minTimeBetweenLowBatteryNotification;
+    }
+    // 
+    if (lowBatteryAcknowledged && millis() - timeLowBatteryNotificationAcknowledged >= timeBetweenLowBatteryNotification) {
+        lowBatteryAcknowledged = false;
+    }
 }
 
-bool BatteryReadout::getBatteryLow() {
+bool BatteryReadout::getBatteryLow() const {
     return batteryLow;
+}
+
+bool BatteryReadout::getLowBatteryAck() const {
+    return lowBatteryAcknowledged;
+}
+
+void BatteryReadout::setLowBatteryAck(bool flag) {
+    if (flag) {
+        timeLowBatteryNotificationAcknowledged = millis();
+        timeBetweenLowBatteryNotification *= 2;
+    }
+    lowBatteryAcknowledged = flag;
 }

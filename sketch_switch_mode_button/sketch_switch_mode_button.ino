@@ -39,14 +39,8 @@ float rawC = 250.0; // Center
 float rawR = 250.0; // Right
 float rawU = 250.0; // Ultrasonic
 
-bool lowBatteryAcknowledged = false;
-
 void loop() {
   battery.update();
-  button.update(battery.getBatteryLow(), lowBatteryAcknowledged);
-  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU, battery.getBatteryLow(), lowBatteryAcknowledged);
-
-  if (!battery.getBatteryLow() && lowBatteryAcknowledged) {
-    lowBatteryAcknowledged = false;
-  }
+  button.update(battery);
+  feedback.update(button.getFeedbackMode(), rawL, rawC, rawR, rawU, battery.getBatteryLow(), battery.getLowBatteryAck());
 }

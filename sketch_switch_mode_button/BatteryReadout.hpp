@@ -14,7 +14,12 @@ public:
     // Check if previous 5 readings were below threshold
     void update();
     // Returns True if battery is low, False otherwise
-    bool getBatteryLow();
+    bool getBatteryLow() const;
+    // Returns the low battery acknowledged flag
+    // True if the user acked the low battery notification, false otherwise
+    bool getLowBatteryAck() const;
+    // Set the low battery acknowledged flag
+    void setLowBatteryAck(bool flag);
 private:
     const int pin;
 
@@ -28,6 +33,13 @@ private:
     float previousReadings[5] = {0, 0, 0, 0, 0};
 
     bool batteryLow = false;
+    bool lowBatteryAcknowledged = false;
+
+    unsigned long timeLowBatteryNotificationAcknowledged = 0;
+    const unsigned long minTimeBetweenLowBatteryNotification = 1000; //Realisticly set to 5 minutes
+    unsigned long timeBetweenLowBatteryNotification = 1000; //Realistically add 5 minutes each time (for testing doubles every time)
+    const unsigned long maxTimeBetweenLowBatteryNotification = 1000 * 60; // 1 min (Realistically set to 30 min)
+
 };
 
 #endif //BATTERY_READOUT_HPP

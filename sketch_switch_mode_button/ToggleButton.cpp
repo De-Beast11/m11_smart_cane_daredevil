@@ -8,7 +8,7 @@ void ToggleButton::setup() {
     pinMode(pin, INPUT_PULLUP);
 }
 
-void ToggleButton::update(bool lowBattery, bool& lowBatteryAcknowledged) {
+void ToggleButton::update(BatteryReadout& battery) {
     bool buttonState = digitalRead(pin);
 
     if (buttonState != lastButtonState) {
@@ -23,8 +23,8 @@ void ToggleButton::update(bool lowBattery, bool& lowBatteryAcknowledged) {
 
             // Detect button press (HIGH -> LOW)
             if (stableState == LOW) {
-                if (lowBattery && !lowBatteryAcknowledged) {
-                    lowBatteryAcknowledged = true;
+                if (battery.getBatteryLow() && !battery.getLowBatteryAck()) {
+                    battery.setLowBatteryAck(true);
                 }
                 else {
                     mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
