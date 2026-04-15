@@ -40,12 +40,6 @@ void Feedback::update(feedbackMode currentFeedbackMode, float distanceLeft, floa
             mode = DIRECTIONAL_FEEDBACK;
         }
     }
-    // FOR TESTING
-    if (previousMode != mode) {
-        Serial.print("MODE: ");
-        Serial.println(mode);
-        previousMode = mode;
-    }
 
     // State Machine for the different feedback: DIRECTIONAL, SWITCH_MODE, LOW_BATTERY
     switch(mode) {

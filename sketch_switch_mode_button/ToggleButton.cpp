@@ -28,8 +28,6 @@ void ToggleButton::update(bool lowBattery, bool& lowBatteryAcknowledged) {
                 }
                 else {
                     mode = (feedbackMode)((mode + 1) % NUM_FEEDBACK_MODES);
-                    Serial.print("BUTTON PRESSED, Feedback Mode: ");
-                    Serial.println(mode);
                 }
             }
         }

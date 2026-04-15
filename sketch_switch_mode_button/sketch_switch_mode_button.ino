@@ -41,8 +41,6 @@ float rawU = 250.0; // Ultrasonic
 
 bool lowBatteryAcknowledged = false;
 
-unsigned long printTime = 0;
-
 void loop() {
   battery.update();
   button.update(battery.getBatteryLow(), lowBatteryAcknowledged);
@@ -50,12 +48,5 @@ void loop() {
 
   if (!battery.getBatteryLow() && lowBatteryAcknowledged) {
     lowBatteryAcknowledged = false;
-  }
-
-  if (millis() - printTime >= 1000) {
-    Serial.println(battery.getBatteryLow());
-    Serial.print("LowBatteryAck: ");
-    Serial.println(lowBatteryAcknowledged);
-    printTime = millis();
   }
 }

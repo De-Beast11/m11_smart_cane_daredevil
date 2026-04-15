@@ -26,7 +26,6 @@ private:
 
     unsigned long lastDebounceTime = 0;
     const unsigned long debounceDelay = 50;
-    const unsigned long feedbackDuration = 1500;
 };
 
 #endif
