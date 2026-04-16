@@ -1,0 +1,118 @@
+// --- Pin Definitions ---
+const int pinBuzzer      = 25;  
+const int pinMotorLeft   = 26;
+const int pinMotorCentre = 27;
+const int pinMotorRight  = 14;
+const int pinButton      = 33; // Pin for mode switching
+const int pinBattery     = 34; // Analog pin to monitor voltage
+
+// --- Configuration ---
+const float MAX_DIST = 200.0; 
+const float MIN_DIST = 10.0;
+const float SMOOTHING_ALPHA = 0.3; // 0.1 to 1.0 (Lower = smoother but slower)
+const float BATT_THRESHOLD = 3.3; // Example voltage threshold for low battery
+
+// --- Enums & States ---
+enum feedbackMode { HAPTIC, AUDIO, BOTH, NUM_MODES };
+feedbackMode currentMode = BOTH;
+
+// --- Independent Zone Variables ---
+struct Zone {
+  int pin;
+  float filteredDist;
+  unsigned long prevMillis;
+  bool state;
+};
+
+Zone leftZone   = {pinMotorLeft, 250.0, 0, false};
+Zone centreZone = {pinMotorCentre, 250.0, 0, false};
+Zone rightZone  = {pinMotorRight, 250.0, 0, false};
+
+unsigned long buzzerMillis = 0;
+bool buzzerState = false;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(pinBuzzer, OUTPUT);
+  pinMode(pinMotorLeft, OUTPUT);
+  pinMode(pinMotorCentre, OUTPUT);
+  pinMode(pinMotorRight, OUTPUT);
+  pinMode(pinButton, INPUT_PULLUP); // Button uses internal resistor
+}
+
+// --- Helper: Sensor Smoothing ---
+float smooth(float current, float previous) {
+  return (SMOOTHING_ALPHA * current) + (1.0 - SMOOTHING_ALPHA) * previous;
+}
+
+// --- Logic for an Individual Motor ---
+void updateMotor(Zone &z, float rawDist, bool allowHaptic) {
+  z.filteredDist = smooth(rawDist, z.filteredDist);
+
+  if (z.filteredDist > 0 && z.filteredDist <= MAX_DIST && allowHaptic) {
+    int interval = map(constrain(z.filteredDist, MIN_DIST, MAX_DIST), MIN_DIST, MAX_DIST, 60, 600);
+    
+    if (millis() - z.prevMillis >= interval) {
+      z.prevMillis = millis();
+      z.state = !z.state;
+      digitalWrite(z.pin, z.state ? HIGH : LOW);
+    }
+  } else {
+    digitalWrite(z.pin, LOW);
+    z.state = false;
+  }
+}
+
+// --- Battery Check ---
+bool isBatteryLow() {
+  int raw = analogRead(pinBattery);
+  float voltage = (raw / 4095.0) * 3.3 * 2; // Assuming a 1:1 voltage divider
+  return (voltage < BATT_THRESHOLD);
+}
+
+void loop() {
+  // 1. Handle Button (Simple state cycle)
+  if (digitalRead(pinButton) == LOW) {
+    currentMode = (feedbackMode)((currentMode + 1) % NUM_MODES);
+    Serial.print("Mode Switched to: "); Serial.println(currentMode);
+    delay(300); // Simple debounce
+  }
+
+  // 2. Placeholder Sensor Inputs (In real life, replace these with sensor.read())
+  float rawL = 50.0;  // Danger on left!
+  float rawC = 180.0; // Distant ahead
+  float rawR = 250.0; // Clear
+  float rawU = 150.0; // Ultrasonic backup sees closer than Center ToF
+
+  // 3. Logic for Center Backup (Take the closest of ToF or Ultrasonic)
+  float effectiveCenter = min(rawC, rawU);
+
+  // 4. Update Haptic Feedback (Independent speeds)
+  bool hapticAllowed = (currentMode == HAPTIC || currentMode == BOTH);
+  
+  // Special Battery Warning: If low, do a "Heartbeat" double-pulse instead
+  if (isBatteryLow()) {
+    digitalWrite(pinMotorCentre, (millis() % 1000 < 100) ? HIGH : LOW); 
+  } else {
+    updateMotor(leftZone, rawL, hapticAllowed);
+    updateMotor(centreZone, effectiveCenter, hapticAllowed);
+    updateMotor(rightZone, rawR, hapticAllowed);
+  }
+
+  // 5. Update Audio Feedback (Buzzer follows the absolute closest object)
+  if (currentMode == AUDIO || currentMode == BOTH) {
+    float absoluteClosest = min(rawL, min(effectiveCenter, rawR));
+    if (absoluteClosest <= MAX_DIST) {
+       int bInterval = map(constrain(absoluteClosest, MIN_DIST, MAX_DIST), MIN_DIST, MAX_DIST, 60, 600);
+       if (millis() - buzzerMillis >= bInterval) {
+         buzzerMillis = millis();
+         buzzerState = !buzzerState;
+         digitalWrite(pinBuzzer, buzzerState ? HIGH : LOW);
+       }
+    } else {
+      digitalWrite(pinBuzzer, LOW);
+    }
+  } else {
+    digitalWrite(pinBuzzer, LOW);
+  }
+}
