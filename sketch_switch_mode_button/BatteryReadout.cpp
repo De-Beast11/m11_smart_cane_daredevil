@@ -13,10 +13,12 @@ void BatteryReadout::update() {
     // Readout ADC
     int rawValue = analogRead(pin);
     // Convert to voltage
+    float voltage = (rawValue / 4095.0) * 3.3;
+    Serial.println(voltage);
     // Factor *2, because of the voltage divider
-    float voltage = (rawValue / 4095.0) * 3.3 * 2;
+    float convertedVoltage = voltage * 2;
     // Filter voltage
-    filteredVoltage = alpha * voltage + (1 - alpha) * filteredVoltage;
+    filteredVoltage = alpha * convertedVoltage + (1 - alpha) * filteredVoltage;
     // Add voltage to previous readings
     previousReadings[currentIndex] = filteredVoltage;
     // Update index
